@@ -358,10 +358,23 @@ $orcids=array(
 
 $orcids = array('0000-0001-8630-3114');
 
+// from file
+if (1)
+{
+	$orcids = array();
+	$filename = 'orcid-from-doi.txt';
+	
+	$file_handle = fopen($filename, "r");
+	while (!feof($file_handle)) 
+	{
+		$orcids[] = trim(fgets($file_handle));
+	}
+}
+
 $doi_lookup = false;
 $dois = array();
 
-$force = true;
+$force = false;
 
 $count = 1;
 
@@ -398,8 +411,6 @@ foreach ($orcids as $orcid)
 				$couch->add_update_or_delete_document($doc, $doc->_id, 'update');
 			}
 		}
-		
-		
 	
 		if (($count++ % 10) == 0)
 		{
