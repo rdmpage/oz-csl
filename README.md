@@ -40,6 +40,29 @@ Then upload this to triple store:
 curl http://130.209.46.63/blazegraph/sparql?context-uri=https://crossref.org -H 'Content-Type: text/rdf+n3' --data-binary '@crossref-citation.nt'  --progress-bar | tee /dev/null
 ```
 
+## ORCID
+
+```
+curl http://127.0.0.1:5984/oz-csl/_design/orcid/_list/triples/doi-orcid-nt > orcid.nt
+```
+
+```
+curl http://130.209.46.63/blazegraph/sparql?context-uri=https://orcid.org -H 'Content-Type: text/rdf+n3' --data-binary '@orcid.nt'  --progress-bar | tee /dev/null
+```
+
+## Problem
+
+Need some careful filtering :O
+
+http://localhost/~rpage/ozymandias-demo/?uri=https://biodiversity.org.au/afd/publication/%23creator/p-kolesik
+
+http://127.0.0.1:5984/_utils/#/database/oz-csl/0000-0002-6671-1273%2Fwork%2F31481366
+
+http://localhost/~rpage/ozymandias-demo/?uri=https://biodiversity.org.au/afd/publication/%23creator/c-l-lambkin
+
+Partly a bug in ORCID where works may have more than one author but CSL returns just the author with an ORCID, hence we always assign ORCID to author position 1. Compare for example:
+
+https://pub.orcid.org/v2.1/0000-0002-6671-1273/work/31481366 accept: application/orcid+json versus accept: application/vnd.citationstyles.csl+json
 
 
 ## SPARQL queries
@@ -79,4 +102,42 @@ where
  
 }
 
+```
+
+
+### Using named graphs
+
+Link author to ORCID via works using named graphs.
+
+```
+SELECT ?name ?doi ?orcid_name
+WHERE
+{
+  GRAPH <https://biodiversity.org.au/afd/publication> {
+  <https://biodiversity.org.au/afd/publication/#creator/l-w-popple> <http://schema.org/name> ?name .
+?role <http://schema.org/creator> <https://biodiversity.org.au/afd/publication/#creator/l-w-popple>  .
+?role <http://schema.org/roleName> ?roleName  .
+
+?work <http://schema.org/creator> ?role  .
+
+?work <http://schema.org/identifier> ?identifier .
+?identifier <http://schema.org/propertyID> "doi" .
+?identifier <http://schema.org/value> ?doi .
+}
+  
+  GRAPH <https://orcid.org>
+  {
+    ?orcid_identifier <http://schema.org/value> ?doi .
+    ?orcid_work <http://schema.org/identifier> ?orcid_identifier .
+    
+	?orcid_work <http://schema.org/creator> ?orcid_role  . 
+    ?orcid_role <http://schema.org/roleName> ?orcid_roleName  .
+    
+    ?orcid_role <http://schema.org/creator> ?orcid_creator  .
+    
+    ?orcid_creator <http://schema.org/name> ?orcid_name .
+  } 
+  
+  FILTER(?roleName = ?orcid_roleName)
+}
 ```

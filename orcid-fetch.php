@@ -358,8 +358,10 @@ $orcids=array(
 
 $orcids = array('0000-0001-8630-3114');
 
+$orcids = array('0000-0002-6384-226X'); // Łukasz Trębicki
+
 // from file
-if (1)
+if (0)
 {
 	$orcids = array();
 	$filename = 'orcid-from-doi.txt';
